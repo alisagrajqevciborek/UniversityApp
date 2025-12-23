@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-cf4(4-%=3qnzw(xy$g)3^1cc-z7zl$05)p9^h+jm@0k4xn784='
+# In production, set DJANGO_SECRET_KEY in the environment (PythonAnywhere Web tab Environment variables)
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-cf4(4-%=3qnzw(xy$g)3^1cc-z7zl$05)p9^h+jm@0k4xn784=')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# In production set DJANGO_DEBUG=False in your environment (PythonAnywhere Web tab Environment variables)
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['alisagrajqevci.pythonanywhere.com', '127.0.0.1', 'localhost', 'testserver']
 
@@ -48,6 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,6 +81,7 @@ SIMPLE_JWT = {
 # Restrict CORS to the frontend origin(s) only
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',  # React dev server
+    'https://alisagrajqevci.pythonanywhere.com',  # production frontend (PythonAnywhere)
 ]
 
 ROOT_URLCONF = 'university.urls'
@@ -84,7 +89,7 @@ ROOT_URLCONF = 'university.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [ BASE_DIR / 'frontend_cra' / 'build' ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -97,6 +102,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'university.wsgi.application'
+
+# When behind a proxy (e.g. PythonAnywhere), allow Django to detect HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Database
@@ -146,4 +154,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Directory to collect static files to (e.g., `python manage.py collectstatic`)
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Serve frontend static files (built React) during production
+STATICFILES_DIRS = [ BASE_DIR / 'frontend_cra' / 'build' / 'static' ]
+
+# Use WhiteNoise to serve static files efficiently and with hashed filenames
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
