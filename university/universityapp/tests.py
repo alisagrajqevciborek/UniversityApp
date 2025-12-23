@@ -55,3 +55,30 @@ class UniversityTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.data['role'], 'student')
         self.assertTrue(len(r.data['subjects']) >= 1)
+
+    def test_admin_can_create_professor(self):
+        # admin token
+        resp = self.client.post('/api/auth/token/', {'username': 'admin', 'password': 'adminpass'}, format='json')
+        token = resp.data['access']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        data = {'username': 'prof2', 'password': 'profpass2', 'first_name': 'Grace', 'last_name': 'Hopper', 'email': 'grace@example.com', 'phone': '33333', 'faculty': self.cs.id, 'office': 'B-201'}
+        r = self.client.post('/api/professors/', data, format='json')
+        self.assertEqual(r.status_code, 201)
+        self.assertEqual(Professor.objects.filter(user__username='prof2').count(), 1)
+
+    def test_student_cannot_create_professor(self):
+        resp = self.client.post('/api/auth/token/', {'username': 'student1', 'password': 'studentpass'}, format='json')
+        token = resp.data['access']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        data = {'username': 'prof3', 'password': 'pass', 'first_name': 'Test'}
+        r = self.client.post('/api/professors/', data, format='json')
+        self.assertEqual(r.status_code, 403)
+
+    def test_admin_can_create_subject(self):
+        resp = self.client.post('/api/auth/token/', {'username': 'admin', 'password': 'adminpass'}, format='json')
+        token = resp.data['access']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        data = {'title': 'Data Structures', 'code': 'CS102', 'faculty': self.cs.id, 'professor_id': self.prof.id, 'student_ids': [self.stud.id]}
+        r = self.client.post('/api/subjects/', data, format='json')
+        self.assertEqual(r.status_code, 201)
+        self.assertTrue(Subject.objects.filter(code='CS102').exists())
