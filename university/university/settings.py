@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-cf4(4-%=3qnzw(
 DEBUG = False
 
 
-ALLOWED_HOSTS = ['alisagrajqevci.pythonanywhere.com', 'www.alisagrajqevci.pythonanywhere.com']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
